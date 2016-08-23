@@ -4,8 +4,8 @@ version = "0.1.0"
 authors = ["Chris Holcombe <xfactor973@gmail.com>"]
 
 [dependencies]
-log = "*"
-simplelog = "*"
+# log = "*"
+# simplelog = "*"
 
 # The development profile, used for `cargo build`
 [profile.dev]
@@ -16,3 +16,6 @@ lto = false    # Controls `-C lto` for binaries and staticlibs
 debug-assertions = true  # Controls whether debug assertions are enabled
 codegen-units = 1 # Controls whether the compiler passes `-C codegen-units`
                   # `codegen-units` is ignored when `lto = true`
+
+# [profile.release]
+# panic = "abort"
