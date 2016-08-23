@@ -139,7 +139,6 @@ fn test_transform_9() {
 fn write_byte<W>(byte: u8, writer: &mut W) -> Result<usize, std::io::Error>
     where W: Write
 {
-    // println!("Writing byte: {}", byte);
     let written_bytes = try!(writer.write(&[byte]));
     if written_bytes < 1 {
         Err(std::io::Error::new(ErrorKind::WriteZero, "Could not write byte"))
@@ -148,7 +147,7 @@ fn write_byte<W>(byte: u8, writer: &mut W) -> Result<usize, std::io::Error>
     }
 }
 
-fn break_shit<W: Write>(byte: u8, writer: &mut W, count: &mut u64)  -> Result<(), std::io::Error> {
+fn process_byte<W: Write>(byte: u8, writer: &mut W, count: &mut u64) -> Result<(), std::io::Error> {
     // println!("Processing {} with count == {}", byte, count);
     if byte == 0x30 {
         if (*count + 1) % 2 == 0 {
@@ -165,11 +164,9 @@ fn break_shit<W: Write>(byte: u8, writer: &mut W, count: &mut u64)  -> Result<()
             return Ok(());
         }
     } else if byte == 0x5c {
-        // println!("else if");
         try!(write_byte(0x5c, writer));
         *count += 1;
     } else {
-        // println!("else");
         // put the outstanding 0x5c and the char we just read in output
         try!(write_byte(0x5c, writer));
         try!(write_byte(byte, writer));
@@ -183,26 +180,21 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
           W: Write
 {
     // As long as there's another byte this loop will continue
-    // 'outer: loop {
-    //     let next_byte = reader.by_ref().bytes().next();
     loop {
         let mut buffer: Vec<u8> = Vec::with_capacity(1024 * 128);
         let read = try!(reader.read_until(0x5c, &mut buffer));
         if read == 0 {
             return Ok(());
         }
-        // println!("buffer: {:?}", buffer);
         if let Some(last) = buffer.pop() {
-
-            writer.write(&buffer[..buffer.len()]);
+            try!(writer.write(&buffer[..buffer.len()]));
             if last != 0x5c {
-                writer.write(&[last]);
+                try!(writer.write(&[last]));
             }
             let mut count: u64 = 1;
-            // break_shit(last, &mut writer, &mut count);
             for byte in reader.by_ref().bytes() {
                 if let Ok(read_byte) = byte {
-                    if let Ok(_) = break_shit(read_byte, &mut writer, &mut count) {
+                    if let Ok(_) = process_byte(read_byte, &mut writer, &mut count) {
                         break;
                     }
                 }
@@ -212,7 +204,6 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
 }
 
 fn main() {
-    // let _ = SimpleLogger::init(LogLevelFilter::Trace);
     // Implicit synchronization
     let mut stdin = BufReader::with_capacity(128 * 1024, io::stdin());
     // BufWriter with 128K capacity.  Try to make our writes large for efficient
