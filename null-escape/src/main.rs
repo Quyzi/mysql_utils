@@ -105,52 +105,83 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
           W: Write
 {
     // As long as there's another byte this loop will continue
-    'outer: loop {
-        let next_byte = reader.by_ref().bytes().next();
-
-        match next_byte {
-            Some(read_byte) => {
-                let read_byte = try!(read_byte);
-
-                // Fast forward through bytes that don't match 0x5c
-                if read_byte != 0x5c {
-                    try!(write_byte(read_byte, &mut writer));
-                    continue;
+    // 'outer: loop {
+    //     let next_byte = reader.by_ref().bytes().next();
+    loop {
+        let mut buffer: Vec<u8> = Vec::new();
+        let read = try!(reader.read_until(0x5c, &mut buffer));
+        if read == 0 {
+            return Ok(());
+        }
+        writer.write(&buffer[..buffer.len()]);
+        let mut count: u64 = 0;
+        for byte in reader.by_ref().bytes() {
+            let read_byte = byte.unwrap();
+            if read_byte == 0x30 {
+                if count % 2 == 0 {
+                    // we saw 0 or even number of 0x5c before 0x5c30
+                    try!(write_byte(0x00, &mut writer));
+                    break;
+                } else {
+                    // we saw odd number of 0x5c before 0x5c30. put the outstanding 0c5c
+                    // in the output,
+                    // and then 0x30
+                    //
+                    try!(write_byte(0x5c, &mut writer));
+                    try!(write_byte(0x30, &mut writer));
+                    break;
                 }
-
-                let mut count: u64 = 0;
-                for byte in reader.by_ref().bytes() {
-                    let read_byte = byte.unwrap();
-                    if read_byte == 0x30 {
-                        if count % 2 == 0 {
-                            // we saw 0 or even number of 0x5c before 0x5c30
-                            try!(write_byte(0x00, &mut writer));
-                            break;
-                        } else {
-                            // we saw odd number of 0x5c before 0x5c30. put the outstanding 0c5c
-                            // in the output,
-                            // and then 0x30
-                            //
-                            try!(write_byte(0x5c, &mut writer));
-                            try!(write_byte(0x30, &mut writer));
-                            break;
-                        }
-                    } else if read_byte == 0x5c {
-                        try!(write_byte(0x5c, &mut writer));
-                        count += 1;
-                    } else {
-                        // put the outstanding 0x5c and the char we just read in output
-                        try!(write_byte(0x5c, &mut writer));
-                        try!(write_byte(read_byte, &mut writer));
-                        break;
-                    }
-                }
-            }
-            None => {
-                break 'outer;
+            } else if read_byte == 0x5c {
+                try!(write_byte(0x5c, &mut writer));
+                count += 1;
+            } else {
+                // put the outstanding 0x5c and the char we just read in output
+                try!(write_byte(0x5c, &mut writer));
+                try!(write_byte(read_byte, &mut writer));
+                break;
             }
         }
     }
+
+
+    // for next_byte in reader.bytes() {
+
+    //     let read_byte = try!(next_byte);
+
+    //     // Fast forward through bytes that don't match 0x5c
+    //     if read_byte != 0x5c {
+    //         try!(write_byte(read_byte, &mut writer));
+    //         continue;
+    //     }
+
+    //     let mut count: u64 = 0;
+    //     for byte in reader.by_ref().bytes() {
+    //         let read_byte = byte.unwrap();
+    //         if read_byte == 0x30 {
+    //             if count % 2 == 0 {
+    //                 // we saw 0 or even number of 0x5c before 0x5c30
+    //                 try!(write_byte(0x00, &mut writer));
+    //                 break;
+    //             } else {
+    //                 // we saw odd number of 0x5c before 0x5c30. put the outstanding 0c5c
+    //                 // in the output,
+    //                 // and then 0x30
+    //                 //
+    //                 try!(write_byte(0x5c, &mut writer));
+    //                 try!(write_byte(0x30, &mut writer));
+    //                 break;
+    //             }
+    //         } else if read_byte == 0x5c {
+    //             try!(write_byte(0x5c, &mut writer));
+    //             count += 1;
+    //         } else {
+    //             // put the outstanding 0x5c and the char we just read in output
+    //             try!(write_byte(0x5c, &mut writer));
+    //             try!(write_byte(read_byte, &mut writer));
+    //             break;
+    //         }
+    //     }
+    // }
     // EOF
     // writer will flush when dropped
     Ok(())
