@@ -31,37 +31,36 @@
 //!    000001a
 //!    Author : vamsi Nov 2015
 
-#[macro_use]
-extern crate log;
-extern crate simplelog;
-
-use simplelog::SimpleLogger;
-use simplelog::LogLevelFilter;
-
 use std::io::{BufReader, BufWriter};
 use std::io;
 use std::io::ErrorKind;
 use std::io::prelude::*;
 
+
 #[test]
-fn test_transform() {
+fn test_transform_1() {
     // 0x5c30 => 0x00
     let test1 = &[0x5c, 0x30];
     let mut input = std::io::Cursor::new(test1);
     let mut output: Vec<u8> = Vec::new();
     process_input(&mut input, &mut output);
-    println!("output: {:?}", output);
+    println!("output1: {:?}", output);
     assert_eq!(output, vec![0x00]);
+}
 
-    // TODO: Broken
-    // 0x5c5c30 => 0x5c5c30 //Broken
+#[test]
+fn test_transform_2() {
+    // 0x5c5c30 => 0x5c5c30
     let test2 = &[0x5c, 0x5c, 0x30];
     let mut input2 = std::io::Cursor::new(test2);
     let mut output2: Vec<u8> = Vec::new();
     process_input(&mut input2, &mut output2);
-    println!("Output2: {:?}", output2);
+    println!("output2: {:?}", output2);
     assert_eq!(output2, vec![0x5c, 0x5c, 0x30]);
+}
 
+#[test]
+fn test_transform_3() {
     // 0x5c5c5c30 => 0x5c5c00
     let test3 = &[0x5c, 0x5c, 0x5c, 0x30];
     let mut input3 = std::io::Cursor::new(test3);
@@ -69,7 +68,10 @@ fn test_transform() {
     process_input(&mut input3, &mut output3);
     println!("output3: {:?}", output3);
     assert_eq!(output3, vec![0x5c, 0x5c, 0x00]);
+}
 
+#[test]
+fn test_transform_4() {
     // 0x5c5c5c5c30 => 0x5c5c5c5c30
     let test4 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x30];
     let mut input4 = std::io::Cursor::new(test4);
@@ -77,7 +79,10 @@ fn test_transform() {
     process_input(&mut input4, &mut output4);
     println!("output4: {:?}", output4);
     assert_eq!(output4, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x30]);
+}
 
+#[test]
+fn test_transform_5() {
     // 0x5c5c5c3030 => 0x5c5c0030
     let test5 = &[0x5c, 0x5c, 0x5c, 0x30, 0x30];
     let mut input5 = std::io::Cursor::new(test5);
@@ -85,19 +90,92 @@ fn test_transform() {
     process_input(&mut input5, &mut output5);
     println!("output5: {:?}", output5);
     assert_eq!(output5, vec![0x5c, 0x5c, 0x00, 0x30]);
+}
 
+#[test]
+fn test_transform_6() {
+    // 0x5c5c5c5c3030 => 0x5c5c5c5c3030
+    let test6 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x30, 0x30];
+    let mut input6 = std::io::Cursor::new(test6);
+    let mut output6: Vec<u8> = Vec::new();
+    process_input(&mut input6, &mut output6);
+    println!("output6: {:?}", output6);
+    assert_eq!(output6, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x30, 0x30]);
+}
+
+#[test]
+fn test_transform_7() {
+    // 0x5c5c5c40 => 0x5c5c5c40
+    let test7 = &[0x5c, 0x5c, 0x5c, 0x40];
+    let mut input7 = std::io::Cursor::new(test7);
+    let mut output7: Vec<u8> = Vec::new();
+    process_input(&mut input7, &mut output7);
+    println!("output7: {:?}", output7);
+    assert_eq!(output7, vec![0x5c, 0x5c, 0x5c, 0x40]);
+}
+
+#[test]
+fn test_transform_8() {
+    // 0x5c5c5c5c40 => 0x5c5c5c5c40
+    let test8 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x40];
+    let mut input8 = std::io::Cursor::new(test8);
+    let mut output8: Vec<u8> = Vec::new();
+    process_input(&mut input8, &mut output8);
+    println!("output8: {:?}", output8);
+    assert_eq!(output8, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x40]);
+}
+
+#[test]
+fn test_transform_9() {
+    // 0x5c5c5c5c40 => 0x5c5c5c5c40
+    let test8 = &[0x5c, 0x24, 0x5c, 0x5c, 0x40];
+    let mut input8 = std::io::Cursor::new(test8);
+    let mut output8: Vec<u8> = Vec::new();
+    process_input(&mut input8, &mut output8);
+    println!("output9: {:?}", output8);
+    assert_eq!(output8, vec![0x5c, 0x24, 0x5c, 0x5c, 0x40]);
 }
 
 fn write_byte<W>(byte: u8, writer: &mut W) -> Result<usize, std::io::Error>
     where W: Write
 {
+    // println!("Writing byte: {}", byte);
     let written_bytes = try!(writer.write(&[byte]));
     if written_bytes < 1 {
-        error!("Unable to write byte: {}", byte);
         Err(std::io::Error::new(ErrorKind::WriteZero, "Could not write byte"))
     } else {
         Ok(written_bytes)
     }
+}
+
+fn break_shit<W: Write>(byte: u8, writer: &mut W, count: &mut u64)  -> Result<(), std::io::Error> {
+    // println!("Processing {} with count == {}", byte, count);
+    if byte == 0x30 {
+        if (*count + 1) % 2 == 0 {
+            // we saw 0 or even number of 0x5c before 0x5c30
+            try!(write_byte(0x00, writer));
+            return Ok(());
+        } else {
+            // we saw odd number of 0x5c before 0x5c30. put the outstanding 0c5c
+            // in the output,
+            // and then 0x30
+            //
+            try!(write_byte(0x5c, writer));
+            try!(write_byte(0x30, writer));
+            return Ok(());
+        }
+    } else if byte == 0x5c {
+        // println!("else if");
+        try!(write_byte(0x5c, writer));
+        *count += 1;
+    } else {
+        // println!("else");
+        // put the outstanding 0x5c and the char we just read in output
+        try!(write_byte(0x5c, writer));
+        try!(write_byte(byte, writer));
+        return Ok(());
+    }
+    Err(std::io::Error::new(std::io::ErrorKind::Other, ""))
 }
 
 fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Error>
@@ -105,59 +183,36 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
           W: Write
 {
     // As long as there's another byte this loop will continue
-    'outer: loop {
-        let next_byte = reader.by_ref().bytes().next();
+    // 'outer: loop {
+    //     let next_byte = reader.by_ref().bytes().next();
+    loop {
+        let mut buffer: Vec<u8> = Vec::with_capacity(1024 * 128);
+        let read = try!(reader.read_until(0x5c, &mut buffer));
+        if read == 0 {
+            return Ok(());
+        }
+        // println!("buffer: {:?}", buffer);
+        if let Some(last) = buffer.pop() {
 
-        match next_byte {
-            Some(read_byte) => {
-                let read_byte = try!(read_byte);
-
-                // Fast forward through bytes that don't match 0x5c
-                if read_byte != 0x5c {
-                    try!(write_byte(read_byte, &mut writer));
-                    continue;
-                }
-
-                let mut count: u64 = 0;
-                for byte in reader.by_ref().bytes() {
-                    let read_byte = byte.unwrap();
-                    if read_byte == 0x30 {
-                        if count % 2 == 0 {
-                            // we saw 0 or even number of 0x5c before 0x5c30
-                            try!(write_byte(0x00, &mut writer));
-                            break;
-                        } else {
-                            // we saw odd number of 0x5c before 0x5c30. put the outstanding 0c5c
-                            // in the output,
-                            // and then 0x30
-                            //
-                            try!(write_byte(0x5c, &mut writer));
-                            try!(write_byte(0x30, &mut writer));
-                            break;
-                        }
-                    } else if read_byte == 0x5c {
-                        try!(write_byte(0x5c, &mut writer));
-                        count += 1;
-                    } else {
-                        // put the outstanding 0x5c and the char we just read in output
-                        try!(write_byte(0x5c, &mut writer));
-                        try!(write_byte(read_byte, &mut writer));
+            writer.write(&buffer[..buffer.len()]);
+            if last != 0x5c {
+                writer.write(&[last]);
+            }
+            let mut count: u64 = 1;
+            // break_shit(last, &mut writer, &mut count);
+            for byte in reader.by_ref().bytes() {
+                if let Ok(read_byte) = byte {
+                    if let Ok(_) = break_shit(read_byte, &mut writer, &mut count) {
                         break;
                     }
                 }
             }
-            None => {
-                break 'outer;
-            }
         }
     }
-    // EOF
-    // writer will flush when dropped
-    Ok(())
 }
 
 fn main() {
-    let _ = SimpleLogger::init(LogLevelFilter::Trace);
+    // let _ = SimpleLogger::init(LogLevelFilter::Trace);
     // Implicit synchronization
     let mut stdin = BufReader::with_capacity(128 * 1024, io::stdin());
     // BufWriter with 128K capacity.  Try to make our writes large for efficient
@@ -167,7 +222,7 @@ fn main() {
     match process_input(&mut stdin, &mut writer) {
         Ok(_) => {}
         Err(e) => {
-            error!("Failed with error: {}", e);
+            println!("Failed with error: {}", e);
         }
     };
 }
