@@ -5,6 +5,7 @@ authors = ["Chris Holcombe <xfactor973@gmail.com>"]
 
 [dependencies]
 log = "*"
+memchr = "*"
 simplelog = "*"
 
 # The development profile, used for `cargo build`
