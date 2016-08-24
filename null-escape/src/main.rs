@@ -43,7 +43,7 @@ fn test_transform_1() {
     let test1 = &[0x5c, 0x30];
     let mut input = std::io::Cursor::new(test1);
     let mut output: Vec<u8> = Vec::new();
-    process_input(&mut input, &mut output);
+    let _ = process_input(&mut input, &mut output);
     println!("output1: {:?}", output);
     assert_eq!(output, vec![0x00]);
 }
@@ -54,7 +54,7 @@ fn test_transform_2() {
     let test2 = &[0x5c, 0x5c, 0x30];
     let mut input2 = std::io::Cursor::new(test2);
     let mut output2: Vec<u8> = Vec::new();
-    process_input(&mut input2, &mut output2);
+    let _ = process_input(&mut input2, &mut output2);
     println!("output2: {:?}", output2);
     assert_eq!(output2, vec![0x5c, 0x5c, 0x30]);
 }
@@ -65,7 +65,7 @@ fn test_transform_3() {
     let test3 = &[0x5c, 0x5c, 0x5c, 0x30];
     let mut input3 = std::io::Cursor::new(test3);
     let mut output3: Vec<u8> = Vec::new();
-    process_input(&mut input3, &mut output3);
+    let _ = process_input(&mut input3, &mut output3);
     println!("output3: {:?}", output3);
     assert_eq!(output3, vec![0x5c, 0x5c, 0x00]);
 }
@@ -76,7 +76,7 @@ fn test_transform_4() {
     let test4 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x30];
     let mut input4 = std::io::Cursor::new(test4);
     let mut output4: Vec<u8> = Vec::new();
-    process_input(&mut input4, &mut output4);
+    let _ = process_input(&mut input4, &mut output4);
     println!("output4: {:?}", output4);
     assert_eq!(output4, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x30]);
 }
@@ -87,7 +87,7 @@ fn test_transform_5() {
     let test5 = &[0x5c, 0x5c, 0x5c, 0x30, 0x30];
     let mut input5 = std::io::Cursor::new(test5);
     let mut output5: Vec<u8> = Vec::new();
-    process_input(&mut input5, &mut output5);
+    let _ = process_input(&mut input5, &mut output5);
     println!("output5: {:?}", output5);
     assert_eq!(output5, vec![0x5c, 0x5c, 0x00, 0x30]);
 }
@@ -98,7 +98,7 @@ fn test_transform_6() {
     let test6 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x30, 0x30];
     let mut input6 = std::io::Cursor::new(test6);
     let mut output6: Vec<u8> = Vec::new();
-    process_input(&mut input6, &mut output6);
+    let _ = process_input(&mut input6, &mut output6);
     println!("output6: {:?}", output6);
     assert_eq!(output6, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x30, 0x30]);
 }
@@ -109,7 +109,7 @@ fn test_transform_7() {
     let test7 = &[0x5c, 0x5c, 0x5c, 0x40];
     let mut input7 = std::io::Cursor::new(test7);
     let mut output7: Vec<u8> = Vec::new();
-    process_input(&mut input7, &mut output7);
+    let _ = process_input(&mut input7, &mut output7);
     println!("output7: {:?}", output7);
     assert_eq!(output7, vec![0x5c, 0x5c, 0x5c, 0x40]);
 }
@@ -120,7 +120,7 @@ fn test_transform_8() {
     let test8 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x40];
     let mut input8 = std::io::Cursor::new(test8);
     let mut output8: Vec<u8> = Vec::new();
-    process_input(&mut input8, &mut output8);
+    let _ = process_input(&mut input8, &mut output8);
     println!("output8: {:?}", output8);
     assert_eq!(output8, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x40]);
 }
@@ -131,7 +131,7 @@ fn test_transform_9() {
     let test8 = &[0x5c, 0x24, 0x5c, 0x5c, 0x40];
     let mut input8 = std::io::Cursor::new(test8);
     let mut output8: Vec<u8> = Vec::new();
-    process_input(&mut input8, &mut output8);
+    let _ = process_input(&mut input8, &mut output8);
     println!("output9: {:?}", output8);
     assert_eq!(output8, vec![0x5c, 0x24, 0x5c, 0x5c, 0x40]);
 }
