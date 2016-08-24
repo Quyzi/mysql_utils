@@ -148,7 +148,6 @@ fn write_byte<W>(byte: u8, writer: &mut W) -> Result<usize, std::io::Error>
 }
 
 fn process_byte<W: Write>(byte: u8, writer: &mut W, count: &mut u64) -> Result<(), std::io::Error> {
-    // println!("Processing {} with count == {}", byte, count);
     if byte == 0x30 {
         if (*count + 1) % 2 == 0 {
             // we saw 0 or even number of 0x5c before 0x5c30
@@ -159,8 +158,7 @@ fn process_byte<W: Write>(byte: u8, writer: &mut W, count: &mut u64) -> Result<(
             // in the output,
             // and then 0x30
             //
-            try!(write_byte(0x5c, writer));
-            try!(write_byte(0x30, writer));
+            try!(writer.write(&[0x5c, 0x30]));
             return Ok(());
         }
     } else if byte == 0x5c {
@@ -168,12 +166,13 @@ fn process_byte<W: Write>(byte: u8, writer: &mut W, count: &mut u64) -> Result<(
         *count += 1;
     } else {
         // put the outstanding 0x5c and the char we just read in output
-        try!(write_byte(0x5c, writer));
-        try!(write_byte(byte, writer));
+        try!(writer.write(&[0x5c, byte]));
         return Ok(());
     }
     Err(std::io::Error::new(std::io::ErrorKind::Other, ""))
 }
+
+const BUFFER_BYTES: usize = 1024 * 32;
 
 fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Error>
     where R: BufRead,
@@ -181,8 +180,8 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
 {
     // As long as there's another byte this loop will continue
     loop {
-        let mut buffer: Vec<u8> = Vec::with_capacity(1024 * 128);
-        let read = try!(reader.read_until(0x5c, &mut buffer));
+        let mut buffer: Vec<u8> = Vec::with_capacity(BUFFER_BYTES);
+        let read = try!(reader.by_ref().take(BUFFER_BYTES as u64).read_until(0x5c, &mut buffer));
         if read == 0 {
             return Ok(());
         }
@@ -205,10 +204,10 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
 
 fn main() {
     // Implicit synchronization
-    let mut stdin = BufReader::with_capacity(128 * 1024, io::stdin());
-    // BufWriter with 128K capacity.  Try to make our writes large for efficient
+    let mut stdin = BufReader::with_capacity(BUFFER_BYTES, io::stdin());
+    // BufWriter with high capacity.  Try to make our writes large for efficient
     // downstream consumption
-    let mut writer = BufWriter::with_capacity(128 * 1024, io::stdout());
+    let mut writer = BufWriter::with_capacity(BUFFER_BYTES * 4, io::stdout());
 
     match process_input(&mut stdin, &mut writer) {
         Ok(_) => {}

@@ -14,3 +14,5 @@ lto = false    # Controls `-C lto` for binaries and staticlibs
 debug-assertions = true  # Controls whether debug assertions are enabled
 codegen-units = 1 # Controls whether the compiler passes `-C codegen-units`
                   # `codegen-units` is ignored when `lto = true`
+[profile.release]
+debug = true
