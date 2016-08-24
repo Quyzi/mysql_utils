@@ -43,7 +43,7 @@ fn test_transform_1() {
     let test1 = &[0x5c, 0x30];
     let mut input = std::io::Cursor::new(test1);
     let mut output: Vec<u8> = Vec::new();
-    process_input(&mut input, &mut output);
+    let _ = process_input(&mut input, &mut output);
     println!("output1: {:?}", output);
     assert_eq!(output, vec![0x00]);
 }
@@ -54,7 +54,7 @@ fn test_transform_2() {
     let test2 = &[0x5c, 0x5c, 0x30];
     let mut input2 = std::io::Cursor::new(test2);
     let mut output2: Vec<u8> = Vec::new();
-    process_input(&mut input2, &mut output2);
+    let _ = process_input(&mut input2, &mut output2);
     println!("output2: {:?}", output2);
     assert_eq!(output2, vec![0x5c, 0x5c, 0x30]);
 }
@@ -65,7 +65,7 @@ fn test_transform_3() {
     let test3 = &[0x5c, 0x5c, 0x5c, 0x30];
     let mut input3 = std::io::Cursor::new(test3);
     let mut output3: Vec<u8> = Vec::new();
-    process_input(&mut input3, &mut output3);
+    let _ = process_input(&mut input3, &mut output3);
     println!("output3: {:?}", output3);
     assert_eq!(output3, vec![0x5c, 0x5c, 0x00]);
 }
@@ -76,7 +76,7 @@ fn test_transform_4() {
     let test4 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x30];
     let mut input4 = std::io::Cursor::new(test4);
     let mut output4: Vec<u8> = Vec::new();
-    process_input(&mut input4, &mut output4);
+    let _ = process_input(&mut input4, &mut output4);
     println!("output4: {:?}", output4);
     assert_eq!(output4, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x30]);
 }
@@ -87,7 +87,7 @@ fn test_transform_5() {
     let test5 = &[0x5c, 0x5c, 0x5c, 0x30, 0x30];
     let mut input5 = std::io::Cursor::new(test5);
     let mut output5: Vec<u8> = Vec::new();
-    process_input(&mut input5, &mut output5);
+    let _ = process_input(&mut input5, &mut output5);
     println!("output5: {:?}", output5);
     assert_eq!(output5, vec![0x5c, 0x5c, 0x00, 0x30]);
 }
@@ -98,7 +98,7 @@ fn test_transform_6() {
     let test6 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x30, 0x30];
     let mut input6 = std::io::Cursor::new(test6);
     let mut output6: Vec<u8> = Vec::new();
-    process_input(&mut input6, &mut output6);
+    let _ = process_input(&mut input6, &mut output6);
     println!("output6: {:?}", output6);
     assert_eq!(output6, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x30, 0x30]);
 }
@@ -109,7 +109,7 @@ fn test_transform_7() {
     let test7 = &[0x5c, 0x5c, 0x5c, 0x40];
     let mut input7 = std::io::Cursor::new(test7);
     let mut output7: Vec<u8> = Vec::new();
-    process_input(&mut input7, &mut output7);
+    let _ = process_input(&mut input7, &mut output7);
     println!("output7: {:?}", output7);
     assert_eq!(output7, vec![0x5c, 0x5c, 0x5c, 0x40]);
 }
@@ -120,7 +120,7 @@ fn test_transform_8() {
     let test8 = &[0x5c, 0x5c, 0x5c, 0x5c, 0x40];
     let mut input8 = std::io::Cursor::new(test8);
     let mut output8: Vec<u8> = Vec::new();
-    process_input(&mut input8, &mut output8);
+    let _ = process_input(&mut input8, &mut output8);
     println!("output8: {:?}", output8);
     assert_eq!(output8, vec![0x5c, 0x5c, 0x5c, 0x5c, 0x40]);
 }
@@ -131,7 +131,7 @@ fn test_transform_9() {
     let test8 = &[0x5c, 0x24, 0x5c, 0x5c, 0x40];
     let mut input8 = std::io::Cursor::new(test8);
     let mut output8: Vec<u8> = Vec::new();
-    process_input(&mut input8, &mut output8);
+    let _ = process_input(&mut input8, &mut output8);
     println!("output9: {:?}", output8);
     assert_eq!(output8, vec![0x5c, 0x24, 0x5c, 0x5c, 0x40]);
 }
@@ -148,7 +148,6 @@ fn write_byte<W>(byte: u8, writer: &mut W) -> Result<usize, std::io::Error>
 }
 
 fn process_byte<W: Write>(byte: u8, writer: &mut W, count: &mut u64) -> Result<(), std::io::Error> {
-    // println!("Processing {} with count == {}", byte, count);
     if byte == 0x30 {
         if (*count + 1) % 2 == 0 {
             // we saw 0 or even number of 0x5c before 0x5c30
@@ -159,8 +158,7 @@ fn process_byte<W: Write>(byte: u8, writer: &mut W, count: &mut u64) -> Result<(
             // in the output,
             // and then 0x30
             //
-            try!(write_byte(0x5c, writer));
-            try!(write_byte(0x30, writer));
+            try!(writer.write(&[0x5c, 0x30]));
             return Ok(());
         }
     } else if byte == 0x5c {
@@ -168,12 +166,13 @@ fn process_byte<W: Write>(byte: u8, writer: &mut W, count: &mut u64) -> Result<(
         *count += 1;
     } else {
         // put the outstanding 0x5c and the char we just read in output
-        try!(write_byte(0x5c, writer));
-        try!(write_byte(byte, writer));
+        try!(writer.write(&[0x5c, byte]));
         return Ok(());
     }
     Err(std::io::Error::new(std::io::ErrorKind::Other, ""))
 }
+
+const BUFFER_BYTES: usize = 1024 * 32;
 
 fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Error>
     where R: BufRead,
@@ -181,8 +180,8 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
 {
     // As long as there's another byte this loop will continue
     loop {
-        let mut buffer: Vec<u8> = Vec::with_capacity(1024 * 128);
-        let read = try!(reader.read_until(0x5c, &mut buffer));
+        let mut buffer: Vec<u8> = Vec::with_capacity(BUFFER_BYTES);
+        let read = try!(reader.by_ref().take(BUFFER_BYTES as u64).read_until(0x5c, &mut buffer));
         if read == 0 {
             return Ok(());
         }
@@ -205,10 +204,10 @@ fn process_input<R, W>(mut reader: R, mut writer: W) -> Result<(), std::io::Erro
 
 fn main() {
     // Implicit synchronization
-    let mut stdin = BufReader::with_capacity(128 * 1024, io::stdin());
-    // BufWriter with 128K capacity.  Try to make our writes large for efficient
+    let mut stdin = BufReader::with_capacity(BUFFER_BYTES, io::stdin());
+    // BufWriter with high capacity.  Try to make our writes large for efficient
     // downstream consumption
-    let mut writer = BufWriter::with_capacity(128 * 1024, io::stdout());
+    let mut writer = BufWriter::with_capacity(BUFFER_BYTES * 4, io::stdout());
 
     match process_input(&mut stdin, &mut writer) {
         Ok(_) => {}
