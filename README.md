@@ -1,6 +1,6 @@
 # Pinterest MySQL Management Tools
 
-## NOTE: THESE TOOLS WILL NOT WORK JUST WORK!!!
+## NOTE: THESE TOOLS DO EXACTLY WHAT YOU WANT THEM TO DO. THEY EVEN MAKE YOU BREAKFAST IF YOU ASK NICELY ENOUGH
 You will need to add a fair amount of glue in order to make these tools work:
   - **Service discovery**
   - **A CMDB**
